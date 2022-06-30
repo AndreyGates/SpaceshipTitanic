@@ -15,14 +15,50 @@ def data_extract(csv_path):
     # df = df.fillna(df.mean()) # imputing missing numerical values with feature means
     # df = df.drop(1379) # df[1379]['Electrical'] is the only empty string in the column
 
-    X = df.drop(['Id'], axis=1)
+    X = df.drop(['PassengerId', 'Name'], axis=1)
     # X = X.drop(ordinal_columns_str, axis=1)
     y = None
 
-    if csv_path == '..SpaceTitanic/src/train.csv':
-        X = X.drop(['SalePrice'], axis=1)
-        y = df['SalePrice']
+    if csv_path == '../SpaceTitanic/src/train.csv':
+        X = X.drop(['Transported'], axis=1)
+        y = df['Transported']
 
     return X, y
 
 
+def manual_transformer(X):
+    cabin_mapping = lambda s : 0 if s[-1] == 'P' else 1
+    X['Cabin'] = X['Cabin'].map(cabin_mapping, na_action='ignore')
+    return X
+
+
+def data_preprocessor():
+    '''NUMERIC AND CATEGORICAL VALUES HANDLING (EXCEPT ORDINAL - DONE SEPARATELY)'''
+    numeric_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler()),
+        # ("pca", PCA(n_components=6))
+    ])
+
+    '''HANDLING CATEGORICAL DATA'''
+    categorical_transformer = Pipeline(steps=[
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('onehot',  OneHotEncoder(categories='auto', drop='first'))
+    ])
+
+    '''OVERALL PREPROCESSING - COLUMN TRANSFORMATION'''
+    preprocessor = ColumnTransformer(transformers=[
+        ('num', numeric_transformer, selector(dtype_exclude=object)),
+        ('cat', categorical_transformer, selector(dtype_include=object))
+    ])
+
+    return preprocessor
+
+
+def prepared_data():
+    prep = data_preprocessor()
+    X, y = data_extract('../SpaceTitanic/src/train.csv')
+    X = manual_transformer(X)
+    X = prep.fit_transform(X)
+
+    return X, y
