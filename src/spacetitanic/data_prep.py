@@ -1,5 +1,7 @@
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 # from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
@@ -41,8 +43,7 @@ def data_preprocessor():
     '''NUMERIC AND CATEGORICAL VALUES HANDLING (EXCEPT ORDINAL - DONE SEPARATELY)'''
     numeric_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler()),
-        # ("pca", PCA(n_components=6))
+        ('scaler', StandardScaler())
     ])
 
     '''HANDLING CATEGORICAL DATA'''
@@ -67,8 +68,13 @@ def prepared_data():
     X_train = manual_transformer(X_train)
     X_train = prep.fit_transform(X_train)
 
+    lda = LinearDiscriminantAnalysis()
+    lda.fit_transform(X_train, y_train)
+
     X_test, y_test = data_extract('../SpaceTitanic/src/test.csv')
     X_test = manual_transformer(X_test)
     X_test = prep.transform(X_test)
+
+    lda.transform(X_test)
 
     return X_train, y_train, X_test, y_test
