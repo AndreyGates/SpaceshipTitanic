@@ -7,26 +7,31 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import make_column_selector as selector
 
 
+PassengerId_test = [] # global variable for submission goals
+
+
+class MyException(Exception): # custom exception
+    pass
+
+
 def data_extract(csv_path):
     '''DATA EXTRACTION'''
     df = pd.read_csv(csv_path)
-
-    # df = df.dropna(axis=1, thresh=len(df.values)/1.5) # dropping columns where 1/3 is Nan or more)
-    # df = df.fillna(df.mean()) # imputing missing numerical values with feature means
-    # df = df.drop(1379) # df[1379]['Electrical'] is the only empty string in the column
-
     X = df.drop(['PassengerId', 'Name'], axis=1)
-    # X = X.drop(ordinal_columns_str, axis=1)
     y = None
 
     if csv_path == '../SpaceTitanic/src/train.csv':
         X = X.drop(['Transported'], axis=1)
         y = df['Transported']
 
+    if csv_path != '../SpaceTitanic/src/train.csv' and csv_path != '../SpaceTitanic/src/test.csv':
+        MyException('Cannot extract train or test data! The wrong file!')
+
     return X, y
 
 
 def manual_transformer(X):
+    '''CUSTOM COLUMN TRANSFORMATION'''
     cabin_mapping = lambda s : 0 if s[-1] == 'P' else 1
     X['Cabin'] = X['Cabin'].map(cabin_mapping, na_action='ignore')
     return X
@@ -56,9 +61,14 @@ def data_preprocessor():
 
 
 def prepared_data():
+    '''PREPROCESSING TRAIN AND TEST DATA'''
     prep = data_preprocessor()
-    X, y = data_extract('../SpaceTitanic/src/train.csv')
-    X = manual_transformer(X)
-    X = prep.fit_transform(X)
+    X_train, y_train = data_extract('../SpaceTitanic/src/train.csv')
+    X_train = manual_transformer(X_train)
+    X_train = prep.fit_transform(X_train)
 
-    return X, y
+    X_test, y_test = data_extract('../SpaceTitanic/src/test.csv')
+    X_test = manual_transformer(X_test)
+    X_test = prep.transform(X_test)
+
+    return X_train, y_train, X_test, y_test
