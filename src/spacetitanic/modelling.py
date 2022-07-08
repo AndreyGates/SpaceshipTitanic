@@ -1,3 +1,4 @@
+from sklearn.ensemble import AdaBoostClassifier
 import xgboost as xgb
 from sklearn.svm import SVC
 from data_prep import prepared_data
@@ -18,18 +19,8 @@ def fill_csv(PassengerId_test, y_test):
 
 # modelling
 X_train, y_train, X_test, y_test = prepared_data()
-model = xgb.XGBClassifier(base_score=0.5, booster='gbtree', callbacks=None,
-                          colsample_bylevel=0.7940834865361239, colsample_bynode=1,
-                          colsample_bytree=0.7565648948818255, early_stopping_rounds=None,
-                          enable_categorical=False, eval_metric=None,
-                          gamma=0.9781032170729997, gpu_id=-1, grow_policy='depthwise',
-                          importance_type=None, interaction_constraints='',
-                          learning_rate=0.058171277286333936, max_bin=256,
-                          max_cat_to_onehot=4, max_delta_step=0, max_depth=1, max_leaves=0,
-                          min_child_weight=3, monotone_constraints='()',
-                          n_estimators=3000, n_jobs=1, num_parallel_tree=1,
-                          predictor='auto', random_state=2, reg_alpha=0.052678020132594046,
-                          reg_lambda=1.4283842692755349)
+
+model = AdaBoostClassifier(learning_rate=0.1, n_estimators=250)
 
 svc = model.fit(X_train, y_train)
 y_test = svc.predict(X_test)
